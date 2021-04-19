@@ -34,6 +34,28 @@
 # define BUT3_IDX  19
 # define BUT3_IDX_MASK (1 << BUT3_IDX)
 
+volatile flag_but1 = 0;
+volatile flag_but2 = 0;
+
+
+void but_callback1(void){
+	if(flag_but1 == 0){
+		flag_but1 = 1;
+	}
+	else{
+		flag_but1 = 0;
+	}
+}
+
+void but_callback2(void){
+	if(flag_but2 == 0){
+		flag_but2 = 1;
+	}
+	else{
+		flag_but2 = 0;
+	}
+}
+
 void init(void){
 	// Initialize the board clock
 	sysclk_init();
@@ -50,6 +72,41 @@ void init(void){
 	
 	pmc_enable_periph_clk(LED3_PIO_ID);
 	pio_configure(LED3_PIO, PIO_OUTPUT_1, LED3_IDX_MASK, PIO_DEFAULT);
+	
+	//Inicializa o botao como input
+	//BOTAO 1
+	pmc_enable_periph_clk(BUT1_PIO_ID);
+	pio_set_input(BUT1_PIO, BUT1_IDX_MASK,PIO_DEFAULT | PIO_DEBOUNCE);
+	pio_set_debounce_filter(BUT1_PIO, BUT1_IDX_MASK, 100);
+	
+	pio_handler_set(BUT1_PIO,
+	BUT1_PIO_ID,
+	BUT1_IDX_MASK,
+	PIO_IT_RISE_EDGE, // PIO_IT_FALL_EDGE --> Queda
+	but_callback1);
+	
+	pio_enable_interrupt(BUT1_PIO, BUT1_IDX_MASK);
+	
+	NVIC_EnableIRQ(BUT1_PIO_ID);
+	NVIC_SetPriority(BUT1_PIO_ID, 4);
+	
+	
+	
+	//BOTAO 2
+	pmc_enable_periph_clk(BUT2_PIO_ID);
+	pio_set_input(BUT2_PIO, BUT2_IDX_MASK,PIO_DEFAULT | PIO_DEBOUNCE);
+	pio_set_debounce_filter(BUT2_PIO, BUT2_IDX_MASK, 100);
+	
+	pio_handler_set(BUT2_PIO,
+	BUT2_PIO_ID,
+	BUT2_IDX_MASK,
+	PIO_IT_RISE_EDGE, // PIO_IT_FALL_EDGE --> Queda
+	but_callback2);
+	
+	pio_enable_interrupt(BUT2_PIO, BUT2_IDX_MASK);
+	
+	NVIC_EnableIRQ(BUT2_PIO_ID);
+	NVIC_SetPriority(BUT2_PIO_ID, 4);
 }
 
 int main (void)
